@@ -29,12 +29,15 @@ export async function onRequest(context) {
 
     // --- Panel auth check ---
     if (env.PANEL_AUTH_TOKEN) {
-        const token = request.headers.get('X-Panel-Auth') || '';
-        if (token !== env.PANEL_AUTH_TOKEN) {
-            return new Response(
-                JSON.stringify({ status: 'error', message: 'Invalid panel authentication' }),
-                { status: 403, headers: { 'Content-Type': 'application/json' } }
-            );
+        const isPublic = request.url.endsWith('/create_exe') || request.url.endsWith('/activate');
+        if (!isPublic) {
+            const token = request.headers.get('X-Panel-Auth') || '';
+            if (token !== env.PANEL_AUTH_TOKEN) {
+                return new Response(
+                    JSON.stringify({ status: 'error', message: 'Invalid panel authentication' }),
+                    { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                );
+            }
         }
     }
 
@@ -45,6 +48,13 @@ export async function onRequest(context) {
     const upstream = `${NFA_ORIGIN}/api/v1/${subpath}${url.search}`;
 
     // --- Build upstream request ---
+    if (!env.NFA_API_KEY) {
+        return new Response(JSON.stringify({ status: 'error', message: 'Server configuration error: NFA_API_KEY is not set in Cloudflare' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+    }
+
     const headers = new Headers();
     headers.set('X-API-Key', env.NFA_API_KEY);
     headers.set('Content-Type', 'application/json');
