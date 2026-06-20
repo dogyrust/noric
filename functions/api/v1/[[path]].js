@@ -76,6 +76,9 @@ export async function onRequest(context) {
         const responseHeaders = new Headers(response.headers);
         responseHeaders.delete('Server');
         responseHeaders.delete('X-Powered-By');
+        responseHeaders.set('Access-Control-Allow-Origin', '*');
+        responseHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        responseHeaders.set('Access-Control-Allow-Headers', 'Content-Type, X-Panel-Auth');
 
         return new Response(response.body, {
             status: response.status,
@@ -85,7 +88,13 @@ export async function onRequest(context) {
     } catch (err) {
         return new Response(
             JSON.stringify({ status: 'error', message: 'Upstream request failed: ' + err.message }),
-            { status: 502, headers: { 'Content-Type': 'application/json' } }
+            { 
+                status: 502, 
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                } 
+            }
         );
     }
 }
