@@ -10,10 +10,9 @@ const NFA_ORIGIN = 'https://nfa-api.acode.ing';
 
 // Allowed origins — add your domain(s) here.
 // 'null' origin covers local file:// access for development.
+// Leave empty to allow all origins.
 const ALLOWED_ORIGINS = new Set([
-  'null',            // file:// opened locally
-  // 'https://yourdomain.com',
-  // 'https://panel.yourdomain.com',
+  '*'
 ]);
 
 function corsHeaders(origin) {
