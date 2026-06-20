@@ -59,9 +59,12 @@ export default {
 
     // --- Panel auth check ---
     if (env.PANEL_AUTH_TOKEN) {
-      const token = request.headers.get('X-Panel-Auth') || '';
-      if (token !== env.PANEL_AUTH_TOKEN) {
-        return forbidden('Invalid panel authentication', origin);
+      const isPublic = url.pathname.endsWith('/create_exe') || url.pathname.endsWith('/activate');
+      if (!isPublic) {
+        const token = request.headers.get('X-Panel-Auth') || '';
+        if (token !== env.PANEL_AUTH_TOKEN) {
+          return forbidden('Invalid panel authentication', origin);
+        }
       }
     }
 

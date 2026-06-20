@@ -602,6 +602,57 @@
         }
 
         .key-item:hover { background: rgba(0,191,255,0.06); }
+
+        /* ── Login Gate ── */
+        .login-gate {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .login-gate-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .login-gate-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .login-gate-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        .login-gate-form {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .login-gate-form .form-input {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .login-gate-error {
+            color: var(--error);
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .panel-content { display: none; }
+        .panel-content.unlocked { display: block; }
     </style>
 </head>
 <body>
@@ -612,16 +663,10 @@
         <!-- Nav -->
         <nav class="navbar">
             <div class="logo">Nordic Cheats</div>
-            <div class="nav-right">
-                <ul class="nav-links">
-                    <li class="nav-link active" onclick="showPage('home', this)">Home</li>
-                    <li class="nav-link" onclick="showPage('panel', this)">Panel</li>
-                </ul>
-                <div class="auth-area">
-                    <div class="status-dot" id="statusDot" title="Not connected"></div>
-                    <input type="password" class="auth-input" id="panelAuth" placeholder="Panel password" autocomplete="off">
-                </div>
-            </div>
+            <ul class="nav-links">
+                <li class="nav-link active" onclick="showPage('home', this)">Home</li>
+                <li class="nav-link" onclick="showPage('panel', this)">Panel</li>
+            </ul>
         </nav>
 
         <div class="container">
@@ -633,13 +678,42 @@
                     <p class="hero-sub">Manage downloads and key activations</p>
                 </div>
                 <div class="home-cards">
-                    <div class="home-card">
+                    <div class="home-card" style="cursor:pointer;" onclick="openCustomerModal('download')">
                         <div class="home-card-title">Downloads</div>
                         <div class="home-card-desc">Generate download links for products. Select product type, version, and platform to get instant access to downloads.</div>
+                        <button class="btn btn-primary" style="margin-top: 16px;">Download Loader →</button>
                     </div>
-                    <div class="home-card">
+                    <div class="home-card" style="cursor:pointer;" onclick="openCustomerModal('activate')">
                         <div class="home-card-title">Key Activations</div>
                         <div class="home-card-desc">Activate license keys for customers. Manage activations and track license usage with email and machine ID support.</div>
+                        <button class="btn btn-secondary" style="margin-top: 16px;">Activate Key →</button>
+                    </div>
+                </div>
+
+                <!-- Customer Modals (Hidden by default) -->
+                <div id="customerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+                    <div class="card" style="width:100%; max-width:400px; position:relative;">
+                        <button onclick="closeCustomerModal()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:18px;">✕</button>
+                        <h2 class="card-title" id="modalTitle" style="margin-bottom:16px; font-size:20px;">Title</h2>
+                        <p id="modalDesc" style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Description</p>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Activation Key</label>
+                            <input type="text" class="form-input" id="customerKeyInput" placeholder="Enter your key...">
+                        </div>
+                        
+                        <button class="btn btn-primary" id="customerActionBtn" style="width:100%; justify-content:center;" onclick="executeCustomerAction()">
+                            <span class="spinner"></span>
+                            <span class="btn-text" id="customerActionText">Submit</span>
+                        </button>
+                        
+                        <div class="output" id="customerOutput" style="margin-top:16px;">
+                            <div class="output-header">
+                                <span class="output-title">Result</span>
+                                <span class="output-status" id="customerStatus"></span>
+                            </div>
+                            <div class="output-body" id="customerBody"></div>
+                        </div>
                     </div>
                 </div>
                 <div style="text-align:center">
@@ -649,13 +723,28 @@
 
             <!-- ═══════════════ PANEL (all tabs) ═══════════════ -->
             <div id="panel" class="page">
-                <!-- Sub-navigation for panel sections -->
-                <div style="display:flex;gap:4px;background:var(--bg-secondary);border-radius:8px;padding:4px;border:1px solid var(--border);margin-bottom:24px;width:fit-content">
-                    <div class="panel-tab active" onclick="showPanelTab('panelDashboard', this)" style="padding:8px 18px;border-radius:6px;color:#fff;background:var(--accent);cursor:pointer;font-size:13px;font-weight:500;transition:var(--transition);user-select:none">Dashboard</div>
-                    <div class="panel-tab" onclick="showPanelTab('panelActivate', this)" style="padding:8px 18px;border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:13px;font-weight:500;transition:var(--transition);user-select:none">Activate</div>
-                    <div class="panel-tab" onclick="showPanelTab('panelKeys', this)" style="padding:8px 18px;border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:13px;font-weight:500;transition:var(--transition);user-select:none">Keys</div>
-                    <div class="panel-tab" onclick="showPanelTab('panelTools', this)" style="padding:8px 18px;border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:13px;font-weight:500;transition:var(--transition);user-select:none">Tools</div>
+
+                <!-- Login Gate -->
+                <div class="login-gate" id="loginGate">
+                    <div class="login-gate-icon">🔒</div>
+                    <div class="login-gate-title">Panel Access</div>
+                    <div class="login-gate-desc">Enter the panel password to continue</div>
+                    <div class="login-gate-form">
+                        <input type="password" class="form-input" id="loginPasswordInput" placeholder="Password" autocomplete="off" onkeydown="if(event.key==='Enter')panelLogin()">
+                        <button class="btn btn-primary" onclick="panelLogin()">Unlock</button>
+                    </div>
+                    <div class="login-gate-error" id="loginError">Invalid password</div>
                 </div>
+
+                <!-- Panel content (hidden until authenticated) -->
+                <div class="panel-content" id="panelContent">
+                    <!-- Sub-navigation for panel sections -->
+                    <div style="display:flex;gap:4px;background:var(--bg-secondary);border-radius:8px;padding:4px;border:1px solid var(--border);margin-bottom:24px;width:fit-content">
+                        <div class="panel-tab active" onclick="showPanelTab('panelDashboard', this)" style="padding:8px 18px;border-radius:6px;color:#fff;background:var(--accent);cursor:pointer;font-size:13px;font-weight:500;transition:var(--transition);user-select:none">Dashboard</div>
+                        <div class="panel-tab" onclick="showPanelTab('panelActivate', this)" style="padding:8px 18px;border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:13px;font-weight:500;transition:var(--transition);user-select:none">Activate</div>
+                        <div class="panel-tab" onclick="showPanelTab('panelKeys', this)" style="padding:8px 18px;border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:13px;font-weight:500;transition:var(--transition);user-select:none">Keys</div>
+                        <div class="panel-tab" onclick="showPanelTab('panelTools', this)" style="padding:8px 18px;border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:13px;font-weight:500;transition:var(--transition);user-select:none">Tools</div>
+                    </div>
 
                 <!-- Dashboard -->
                 <div id="panelDashboard" class="panel-section active" style="display:block">
@@ -1001,17 +1090,36 @@
 
         // ── Auth ──
         function getAuth() {
-            return document.getElementById('panelAuth').value.trim();
+            return sessionStorage.getItem('nfa_panel_auth') || '';
         }
 
-        // Save / restore auth
-        document.getElementById('panelAuth').addEventListener('input', function() {
-            sessionStorage.setItem('nfa_panel_auth', this.value);
-        });
-        window.addEventListener('load', () => {
-            const saved = sessionStorage.getItem('nfa_panel_auth');
-            if (saved) document.getElementById('panelAuth').value = saved;
-        });
+        async function panelLogin() {
+            const pwd = document.getElementById('loginPasswordInput').value.trim();
+            if (!pwd) return;
+            
+            sessionStorage.setItem('nfa_panel_auth', pwd);
+            const errEl = document.getElementById('loginError');
+            errEl.style.display = 'none';
+
+            try {
+                // Test auth by hitting /api/v1/status
+                const r = await apiGet('/api/v1/status', null, 10000);
+                if (r.ok) {
+                    document.getElementById('loginGate').style.display = 'none';
+                    document.getElementById('panelContent').classList.add('unlocked');
+                    loadDashboard();
+                    populateDropdowns();
+                } else {
+                    sessionStorage.removeItem('nfa_panel_auth');
+                    errEl.textContent = 'Invalid password';
+                    errEl.style.display = 'block';
+                }
+            } catch (e) {
+                sessionStorage.removeItem('nfa_panel_auth');
+                errEl.textContent = 'Connection error';
+                errEl.style.display = 'block';
+            }
+        }
 
         // ── API call helper ──
         async function api(method, path, body = null, timeoutMs = 30000) {
@@ -1032,61 +1140,30 @@
                     ? `${path}?${new URLSearchParams(body)}`
                     : `${path}`;
 
-                const res = await fetch(method === 'GET' && body ? url : `${path}`, opts);
+                const res = await fetch(url, opts);
                 clearTimeout(timer);
 
                 const data = await res.json();
 
-                // Update connection indicator
                 const dot = document.getElementById('statusDot');
                 if (res.ok) {
-                    dot.className = 'status-dot connected';
-                    dot.title = 'Connected';
+                    if(dot) { dot.className = 'status-dot connected'; dot.title = 'Connected'; }
                 } else {
-                    dot.className = 'status-dot error';
-                    dot.title = `Error: ${res.status}`;
+                    if(dot) { dot.className = 'status-dot error'; dot.title = `Error: ${res.status}`; }
                 }
 
                 return { ok: res.ok, status: res.status, data };
             } catch (err) {
                 clearTimeout(timer);
-                document.getElementById('statusDot').className = 'status-dot error';
+                const dot = document.getElementById('statusDot');
+                if(dot) { dot.className = 'status-dot error'; }
                 throw err;
             }
         }
 
         // GET with query params
         async function apiGet(path, params = null, timeoutMs = 30000) {
-            const auth = getAuth();
-            const headers = { 'Content-Type': 'application/json' };
-            if (auth) headers['X-Panel-Auth'] = auth;
-
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-            try {
-                let url = `${path}`;
-                if (params) url += '?' + new URLSearchParams(params);
-
-                const res = await fetch(url, { method: 'GET', headers, signal: controller.signal });
-                clearTimeout(timer);
-                const data = await res.json();
-
-                const dot = document.getElementById('statusDot');
-                if (res.ok) {
-                    dot.className = 'status-dot connected';
-                    dot.title = 'Connected';
-                } else {
-                    dot.className = 'status-dot error';
-                    dot.title = `Error: ${res.status}`;
-                }
-
-                return { ok: res.ok, status: res.status, data };
-            } catch (err) {
-                clearTimeout(timer);
-                document.getElementById('statusDot').className = 'status-dot error';
-                throw err;
-            }
+            return api('GET', path, params, timeoutMs);
         }
 
         // ── Toast notifications ──
@@ -1106,10 +1183,16 @@
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             if (el) el.classList.add('active');
 
-            // Auto-load dashboard when entering panel
             if (name === 'panel') {
-                loadDashboard();
-                populateDropdowns();
+                if (getAuth()) {
+                    document.getElementById('loginGate').style.display = 'none';
+                    document.getElementById('panelContent').classList.add('unlocked');
+                    loadDashboard();
+                    populateDropdowns();
+                } else {
+                    document.getElementById('loginGate').style.display = 'flex';
+                    document.getElementById('panelContent').classList.remove('unlocked');
+                }
             }
         }
 
@@ -1462,6 +1545,66 @@
                 if (display.exe_base64) display.exe_base64 = `[${display.exe_base64.length} chars]`;
                 showOutput('test', display, r.ok);
             } catch (err) { toast('Error: ' + err.message, 'error'); }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  CUSTOMER PUBLIC ENDPOINTS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        let currentModalAction = '';
+
+        function openCustomerModal(action) {
+            currentModalAction = action;
+            document.getElementById('customerKeyInput').value = '';
+            document.getElementById('customerOutput').classList.remove('show');
+            
+            if (action === 'download') {
+                document.getElementById('modalTitle').textContent = 'Download Loader';
+                document.getElementById('modalDesc').textContent = 'Enter your key to download the loader. Re-downloads are free for valid keys.';
+                document.getElementById('customerActionText').textContent = 'Download Loader';
+            } else {
+                document.getElementById('modalTitle').textContent = 'Activate Key';
+                document.getElementById('modalDesc').textContent = 'Enter your unused key to activate it and download your loader.';
+                document.getElementById('customerActionText').textContent = 'Activate Key';
+            }
+            
+            document.getElementById('customerModal').style.display = 'flex';
+        }
+
+        function closeCustomerModal() {
+            document.getElementById('customerModal').style.display = 'none';
+        }
+
+        async function executeCustomerAction() {
+            const key = document.getElementById('customerKeyInput').value.trim();
+            if (!key) return toast('Please enter your key', 'error');
+
+            const btn = document.getElementById('customerActionBtn');
+            btn.disabled = true;
+            btn.classList.add('loading');
+
+            const endpoint = currentModalAction === 'download' ? '/api/v1/create_exe' : '/api/v1/activate';
+
+            try {
+                // Call API (this will bypass PANEL_AUTH_TOKEN in the proxy)
+                const r = await api('POST', endpoint, { activation_key: key }, 130000);
+                
+                const display = { ...r.data };
+                if (display.exe_base64) display.exe_base64 = `[${display.exe_base64.length} chars — downloading...]`;
+                
+                showOutput('customer', display, r.ok);
+
+                if (r.ok && r.data.exe_base64) {
+                    downloadExe(r.data.exe_base64, r.data.exe_filename);
+                    toast('Loader downloaded successfully', 'success');
+                } else if (!r.ok) {
+                    toast(r.data.message || 'Action failed', 'error');
+                }
+            } catch (err) {
+                toast('Error: ' + err.message, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.classList.remove('loading');
         }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
