@@ -27,9 +27,11 @@ export async function onRequest(context) {
         });
     }
 
+    const url = new URL(request.url);
+
     // --- Panel auth check ---
     if (env.PANEL_AUTH_TOKEN) {
-        const isPublic = request.url.endsWith('/create_exe') || request.url.endsWith('/activate');
+        const isPublic = url.pathname.endsWith('/create_exe') || url.pathname.endsWith('/activate');
         if (!isPublic) {
             const token = request.headers.get('X-Panel-Auth') || '';
             if (token !== env.PANEL_AUTH_TOKEN) {
@@ -44,7 +46,6 @@ export async function onRequest(context) {
     // --- Build the upstream path ---
     // params.path is an array of path segments after /api/v1/
     const subpath = params.path ? params.path.join('/') : '';
-    const url = new URL(request.url);
     const upstream = `${NFA_ORIGIN}/api/v1/${subpath}${url.search}`;
 
     // --- Build upstream request ---
