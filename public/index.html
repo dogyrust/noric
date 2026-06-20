@@ -1143,7 +1143,19 @@
                 const res = await fetch(url, opts);
                 clearTimeout(timer);
 
-                const data = await res.json();
+                let data;
+                const contentType = res.headers.get('Content-Type') || '';
+                if (contentType.includes('application/json')) {
+                    try {
+                        data = await res.json();
+                    } catch (jsonErr) {
+                        const text = await res.text();
+                        data = { status: 'error', message: `Invalid JSON response: ${text.slice(0, 200)}` };
+                    }
+                } else {
+                    const text = await res.text();
+                    data = { status: 'error', message: text.slice(0, 200) || `HTTP Error ${res.status}: ${res.statusText}` };
+                }
 
                 const dot = document.getElementById('statusDot');
                 if (res.ok) {
@@ -1152,7 +1164,7 @@
                     if(dot) { dot.className = 'status-dot error'; dot.title = `Error: ${res.status}`; }
                 }
 
-                return { ok: res.ok, status: res.status, data };
+                return { ok: res.ok && data?.status !== 'error', status: res.status, data };
             } catch (err) {
                 clearTimeout(timer);
                 const dot = document.getElementById('statusDot');
