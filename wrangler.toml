@@ -1,16 +1,3 @@
-name = "nfa-reseller-panel"
+name = "noric"
 compatibility_date = "2024-12-01"
-
-# Cloudflare Pages project
-# The static site lives in /public
-# The API proxy lives in /functions/api/v1/[[path]].js
-#
-# Deploy:
-#   wrangler pages deploy public
-#
-# Set secrets (do this AFTER first deploy creates the project):
-#   wrangler pages secret put NFA_API_KEY --project-name nfa-reseller-panel
-#   wrangler pages secret put PANEL_AUTH_TOKEN --project-name nfa-reseller-panel
-#
-# Local dev:
-#   wrangler pages dev public
+pages_build_output_dir = "public"
