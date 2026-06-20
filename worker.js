@@ -75,6 +75,13 @@ export default {
     // --- Build upstream request ---
     const upstream = new URL(url.pathname + url.search, NFA_ORIGIN);
 
+    if (!env.NFA_API_KEY) {
+      return new Response(JSON.stringify({ status: 'error', message: 'Server configuration error: NFA_API_KEY is not set in Cloudflare' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+      });
+    }
+
     const headers = new Headers();
     headers.set('X-API-Key', env.NFA_API_KEY);
     headers.set('Content-Type', 'application/json');
